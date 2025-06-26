@@ -11,20 +11,53 @@ namespace Isometric2DGame.Characters.AI
 		Patrol,     // Enemy is following a predefined path.
 	}
 
-	// What can the AI currently do?
 	[System.Serializable]
-	public struct AIAbilities
+	public class AIModule
 	{
-		public bool canFollow;
-		public bool canAttack;
-		public bool canPatrol;
-
-		public AIAbilities (bool follow, bool attack, bool patrol)
+		[SerializeField]
+		private bool isEnabled = true;		// Whether this AI module is enabled or not.
+		public bool IsEnabled
 		{
-			canFollow = follow;
-			canAttack = attack;
-			canPatrol = patrol;
+			get => isEnabled;
+			set => isEnabled = value;
 		}
+	}
+
+	[System.Serializable]
+	public class FollowModule : AIModule
+	{
+		private GameObject primaryTarget;	// The target the AI is currently interacting with, e.g., the player.
+		public GameObject PrimaryTarget
+		{
+			get => primaryTarget;
+			set => primaryTarget = value;
+		}
+		public GameObject[] possibleTargets; // All possible targets the AI can interact with.
+		public float detectionDist = 5f;     // The distance at which the AI can detect targets.
+	}
+
+	[System.Serializable]
+	public class PatrolModule : AIModule
+	{
+		private Transform patrolTarget;     // The target the AI is currently patrolling towards.
+		public Transform PatrolTarget
+		{
+			get => patrolTarget;
+			set => patrolTarget = value;
+		}
+		public Transform[] patrolPoints;	// The points the AI will patrol between.
+		public float patrolDelay = 2f;		// The time the AI will wait at each patrol point before moving to the next one.
+		public float lastPatrolTime = 0f;	// The speed at which the AI will patrol.
+	}
+
+	[System.Serializable]
+	public class AttackModule : AIModule
+	{
+		[Header("Note: Attack Module depends on Follow Module to find the target.")]
+		public float attackDist = 1.5f;		// The distance at which the AI can attack the target.
+		public float attackDelay = 1f;		// The delay between attacks.
+		public float lastAttackTime = 0f;	// The time when the AI last attacked.
+		public float attackDamage = 10f;	// The damage dealt by the AI when it attacks.
 	}
 
 	// Base class for AI components.
@@ -36,54 +69,19 @@ namespace Isometric2DGame.Characters.AI
 		protected Rigidbody2D myRigidbody;
 		protected Collider2D myCollider;
 
-		[SerializeField]
-		private AIAbilities abilities = new(true, false, false); // By default, AI can follow, but not attack or patrol.
-		public AIAbilities Abilities
-		{
-			get => abilities;
-			protected set => abilities = value;
-		}
 		protected AIState currentState = AIState.Idle;
 
 		[SerializeField]
 		protected float moveSpeed = 2f;
 
-		// Follow and attacking stuff
-		private GameObject primaryTarget;       // The target the AI is currently interacting with, e.g., the player.
-		public GameObject PrimaryTarget
-		{
-			get => primaryTarget;
-			protected set => primaryTarget = value;
-		}
 		[SerializeField]
-		protected GameObject[] possibleTargets; // All possible targets the AI can interact with.
-		[SerializeField]
-		protected float detectionDist = 5f;     // The distance at which the AI can detect targets.
+		protected FollowModule followModule = new FollowModule();
 
-		// Patrol stuff
-		private Transform patrolTarget;         // The target the AI is currently patrolling towards.
-		public Transform PatrolTarget
-		{
-			get => patrolTarget;
-			protected set => patrolTarget = value;
-		}
 		[SerializeField]
-		protected Transform[] patrolPoints;		// The points the AI will patrol between.
-		[SerializeField]
-		protected float patrolDelay = 2f;		// The time the AI will wait at each patrol point before moving to the next one.
-		[SerializeField]
-		protected float lastPatrolTime = 0f;	// The speed at which the AI will patrol.
+		protected PatrolModule patrolModule = new PatrolModule();
 
-		// Attack stuff
 		[SerializeField]
-		protected float attackDist = 1.5f;      // The distance at which the AI can attack the target.
-		[SerializeField]
-		protected float attackDelay = 1f;       // The delay between attacks.
-		[SerializeField]
-		protected float lastAttackTime = 0f;    // The time when the AI last attacked.
-		[SerializeField]
-		protected float attackDamage = 10f;     // The damage dealt by the AI when it attacks.
-
+		protected AttackModule attackModule = new AttackModule();
 
 		protected virtual void Awake()
 		{
@@ -91,36 +89,16 @@ namespace Isometric2DGame.Characters.AI
 			myRigidbody = GetComponent<Rigidbody2D>();
 			myCollider = GetComponent<Collider2D>();
 
-			PrimaryTarget = null; // No initial target. Otherwise ai may try to follow a target prematurely.
+			followModule.PrimaryTarget = null; // No initial target. Otherwise ai may try to follow a target prematurely.
 
-			if (Abilities.canPatrol)
+			if (patrolModule.IsEnabled)
 			{
-				PatrolTarget = GetNextPatrolPoint();
+				patrolModule.PatrolTarget = GetNextPatrolPoint();
 			}
 			else
 			{
-				PatrolTarget = null; // No patrol target if AI can't patrol.
+				patrolModule.PatrolTarget = null; // No patrol target if AI can't patrol.
 			}
-		}
-
-		// Returns a random patrol point from the list of patrol points.
-		// It will not be the same as the current patrol target.
-		protected Transform GetNextPatrolPoint()
-		{
-			if (patrolPoints.Length == 0)
-			{
-				Debug.LogWarning("No patrol points set for AI. Please set patrol points.");
-				return null;
-			}
-
-			Transform nextPoint;
-
-			do
-			{
-				nextPoint = patrolPoints[Random.Range(0, patrolPoints.Length)];
-			} while (nextPoint == PatrolTarget);
-
-			return nextPoint;
 		}
 
 		private void Update()
@@ -139,21 +117,21 @@ namespace Isometric2DGame.Characters.AI
 		{
 			currentState = AIState.Idle; // Default state is idle.
 
-			if (PrimaryTarget != null)
+			if (followModule.PrimaryTarget != null)
 			{
-				if (Abilities.canAttack && GetAttackableHealth(PrimaryTarget) != null)
+				if (attackModule.IsEnabled && GetAttackableHealth(followModule.PrimaryTarget) != null)
 				{
 					currentState = AIState.Attack;
 					return;
 				}
-				if (Abilities.canFollow)
+				if (followModule.IsEnabled)
 				{
 					currentState = AIState.Follow;
 					return;
 				}
 			}
 
-			if (Abilities.canPatrol && PatrolTarget != null)
+			if (patrolModule.IsEnabled && patrolModule.PatrolTarget != null)
 			{
 				currentState = AIState.Patrol;
 				return;
@@ -171,13 +149,13 @@ namespace Isometric2DGame.Characters.AI
 					// TODO: Animations etc. for idle
 					break;
 				case AIState.Follow:
-					FollowTarget(PrimaryTarget);
+					FollowTarget(followModule.PrimaryTarget);
 					break;
 				case AIState.Attack:
-					PerformAttack(PrimaryTarget);
+					PerformAttack(followModule.PrimaryTarget);
 					break;
 				case AIState.Patrol:
-					Patrol(PatrolTarget);
+					Patrol(patrolModule.PatrolTarget);
 					break;
 			}
 		}
@@ -187,7 +165,7 @@ namespace Isometric2DGame.Characters.AI
 		// Uses raycasting to check for obstacles.
 		protected GameObject FindTargetToFollow()
 		{
-			foreach (GameObject target in possibleTargets)
+			foreach (GameObject target in followModule.possibleTargets)
 			{
 				if (CanFollowObstacle(target)) 
 					return target; // Found a valid target to follow.
@@ -212,7 +190,7 @@ namespace Isometric2DGame.Characters.AI
 			if (target == null)
 				return false;
 
-			return Vector2.Distance(transform.position, target.transform.position) <= detectionDist;
+			return Vector2.Distance(transform.position, target.transform.position) <= followModule.detectionDist;
 		}
 
 		// Checks if the AI can follow the target, considering distance AND obstacles in the way.
@@ -224,7 +202,7 @@ namespace Isometric2DGame.Characters.AI
 			if (!CanFollow(target))
 				return false;
 			
-			RaycastHit2D hit = Physics2D.Raycast(transform.position, target.transform.position - transform.position, detectionDist);
+			RaycastHit2D hit = Physics2D.Raycast(transform.position, target.transform.position - transform.position, followModule.detectionDist);
 			return (hit.collider != null && hit.collider.gameObject == target);
 		}
 
@@ -236,10 +214,10 @@ namespace Isometric2DGame.Characters.AI
 			if (target == null)
 				return null;
 
-			if (Time.time < lastAttackTime + attackDelay)
+			if (Time.time < attackModule.lastAttackTime + attackModule.attackDelay)
 				return null; // Can't attack yet, still in cooldown.
 
-			if (Vector2.Distance(transform.position, target.transform.position) > attackDist)
+			if (Vector2.Distance(transform.position, target.transform.position) > attackModule.attackDist)
 				return null;
 
 			return target.GetComponent<CharacterHealth>();
@@ -257,16 +235,21 @@ namespace Isometric2DGame.Characters.AI
 			if (targetHealth == null) 
 				return; 
 
-			targetHealth.TakeDamage(attackDamage);
-			lastAttackTime = Time.time; // Reset the attack timer.
+			targetHealth.TakeDamage(attackModule.attackDamage);
+			attackModule.lastAttackTime = Time.time; // Reset the attack timer.
 		}
 
 		private void Patrol(Transform target)
 		{
+			// We have to check if follow module is enabled, because it may override the patrol target.
+			// If follow module is enabled, we will try to find a target to follow first.
+			if (followModule.IsEnabled)
+				FindTargetToFollow();
+
 			if (target == null)
 				return;
 
-			if (Time.time < lastPatrolTime + patrolDelay)
+			if (Time.time < patrolModule.lastPatrolTime + patrolModule.patrolDelay)
 				return; // Cooldonw
 
 			ProcessMovementTowards(target.position);
@@ -274,12 +257,29 @@ namespace Isometric2DGame.Characters.AI
 			// Did we reach the patrol target?
 			if (Vector2.Distance(transform.position, target.position) < 0.1f)
 			{
-				PatrolTarget = GetNextPatrolPoint();
-				lastPatrolTime = Time.time; // Reset the patrol timer.
+				patrolModule.PatrolTarget = GetNextPatrolPoint();
+				patrolModule.lastPatrolTime = Time.time; // Reset the patrol timer.
+			}
+		}
+
+		// Returns a random patrol point from the list of patrol points.
+		// It will not be the same as the current patrol target.
+		protected Transform GetNextPatrolPoint()
+		{
+			if (patrolModule.patrolPoints.Length == 0)
+			{
+				Debug.LogWarning("No patrol points set for AI. Please set patrol points.");
+				return null;
 			}
 
-			if (Abilities.canFollow)
-				FindTargetToFollow();
+			Transform nextPoint;
+
+			do
+			{
+				nextPoint = patrolModule.patrolPoints[Random.Range(0, patrolModule.patrolPoints.Length)];
+			} while (nextPoint == patrolModule.PatrolTarget);
+
+			return nextPoint;
 		}
 
 		private void ProcessMovementTowards(Vector2 target)

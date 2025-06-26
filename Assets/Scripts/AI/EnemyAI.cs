@@ -9,7 +9,11 @@ namespace Isometric2DGame.Characters.AI
 		{
 			base.Awake();
 
-			possibleTargets = GameObject.FindGameObjectsWithTag("Player");
+			if (followModule.possibleTargets == null || followModule.possibleTargets.Length == 0)
+			{
+				Debug.LogWarning("No possible targets set for EnemyAI. Finding players by tag.");
+				followModule.possibleTargets = GameObject.FindGameObjectsWithTag("Player");
+			}
 		}
 	}
 }
