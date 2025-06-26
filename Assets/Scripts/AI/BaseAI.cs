@@ -186,9 +186,6 @@ namespace Isometric2DGame.Characters.AI
 		// Follows the target, moving towards it at the AI's move speed.
 		protected void FollowTarget(GameObject target)
 		{
-			//if (target == null)
-			//	return;
-
 			if (!CanFollow(target))
 				return;
 
@@ -240,9 +237,6 @@ namespace Isometric2DGame.Characters.AI
 		// Also, target should have a health component.
 		private void PerformAttack(GameObject target)
 		{
-			//if (target == null)
-			//	return;
-
 			CharacterHealth targetHealth = GetAttackableHealth(target);
 
 			// Either in cooldown or target is not attackable.
