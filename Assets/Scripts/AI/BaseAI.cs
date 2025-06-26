@@ -68,7 +68,11 @@ namespace Isometric2DGame.Characters.AI
 			protected set => patrolTarget = value;
 		}
 		[SerializeField]
-		protected Transform[] patrolPoints;     // The points the AI will patrol between.
+		protected Transform[] patrolPoints;		// The points the AI will patrol between.
+		[SerializeField]
+		protected float patrolDelay = 2f;		// The time the AI will wait at each patrol point before moving to the next one.
+		[SerializeField]
+		protected float lastPatrolTime = 0f;	// The speed at which the AI will patrol.
 
 		// Attack stuff
 		[SerializeField]
@@ -77,6 +81,8 @@ namespace Isometric2DGame.Characters.AI
 		protected float attackDelay = 1f;       // The delay between attacks.
 		[SerializeField]
 		protected float lastAttackTime = 0f;    // The time when the AI last attacked.
+		[SerializeField]
+		protected float attackDamage = 10f;     // The damage dealt by the AI when it attacks.
 
 
 		protected virtual void Awake()
@@ -128,23 +134,29 @@ namespace Isometric2DGame.Characters.AI
 		}
 
 		// Called every frate to determine the AI's current state based on its abilities and targets.
+		// Our base state machine logic.
 		private void CalculateState()
 		{
-			if (Abilities.canFollow && PrimaryTarget != null)
+			currentState = AIState.Idle; // Default state is idle.
+
+			if (PrimaryTarget != null)
 			{
-				currentState = AIState.Follow;
+				if (Abilities.canAttack && GetAttackableHealth(PrimaryTarget) != null)
+				{
+					currentState = AIState.Attack;
+					return;
+				}
+				if (Abilities.canFollow)
+				{
+					currentState = AIState.Follow;
+					return;
+				}
 			}
-			else if (Abilities.canAttack && PrimaryTarget != null && Vector2.Distance(transform.position, PrimaryTarget.transform.position) <= attackDist)
-			{
-				currentState = AIState.Attack;
-			}
-			else if (Abilities.canPatrol && PatrolTarget != null)
+
+			if (Abilities.canPatrol && PatrolTarget != null)
 			{
 				currentState = AIState.Patrol;
-			}
-			else
-			{
-				currentState = AIState.Idle;
+				return;
 			}
 		}
 
@@ -237,13 +249,15 @@ namespace Isometric2DGame.Characters.AI
 		// Also, target should have a health component.
 		private void PerformAttack(GameObject target)
 		{
+			// TODO: Should we get rid of this check?
+			// It's already done in CalculateState.
 			CharacterHealth targetHealth = GetAttackableHealth(target);
 
 			// Either in cooldown or target is not attackable.
 			if (targetHealth == null) 
 				return; 
 
-			// Perform attack logic here.
+			targetHealth.TakeDamage(attackDamage);
 			lastAttackTime = Time.time; // Reset the attack timer.
 		}
 
@@ -252,12 +266,16 @@ namespace Isometric2DGame.Characters.AI
 			if (target == null)
 				return;
 
+			if (Time.time < lastPatrolTime + patrolDelay)
+				return; // Cooldonw
+
 			ProcessMovementTowards(target.position);
 
 			// Did we reach the patrol target?
 			if (Vector2.Distance(transform.position, target.position) < 0.1f)
 			{
 				PatrolTarget = GetNextPatrolPoint();
+				lastPatrolTime = Time.time; // Reset the patrol timer.
 			}
 
 			if (Abilities.canFollow)
