@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Isometric2DGame.Player
+namespace Isometric2DGame.Characters.Player
 {
 	public class PlayerController : MonoBehaviour
 	{
