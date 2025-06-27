@@ -149,13 +149,13 @@ namespace Isometric2DGame.Characters.AI
 					// TODO: Animations etc. for idle
 					break;
 				case AIState.Follow:
-					FollowTarget(followModule.PrimaryTarget);
+					Follow();
 					break;
 				case AIState.Attack:
-					PerformAttack(followModule.PrimaryTarget);
+					Attack();
 					break;
 				case AIState.Patrol:
-					Patrol(patrolModule.PatrolTarget);
+					Patrol();
 					break;
 			}
 		}
@@ -173,13 +173,26 @@ namespace Isometric2DGame.Characters.AI
 			return null; // No valid target found
 		}
 
-		// Follows the target, moving towards it at the AI's move speed.
-		protected void FollowTarget(GameObject target)
+		// Follows the primary target, moving towards it at the AI's move speed.
+		protected virtual void Follow()
+		{
+			if (!FollowTarget(followModule.PrimaryTarget))
+			{
+				followModule.PrimaryTarget = null; // Clear the target if it's out of range.
+				return;
+			}
+		}
+
+		// Follows a known target.
+		// Does not check for obstacles, only distance.
+		// Because you won't forget the target if you already saw it.
+		private bool FollowTarget(GameObject target)
 		{
 			if (!CanFollow(target))
-				return;
+				return false;
 
 			ProcessMovementTowards(target.transform.position);
+			return true;
 		}
 
 		// Checks if the AI can follow the target based on distance.
@@ -222,9 +235,14 @@ namespace Isometric2DGame.Characters.AI
 			return target.GetComponent<CharacterHealth>();
 		}
 
+		protected virtual void Attack()
+		{
+			AttackToTarget(followModule.PrimaryTarget);
+		}
+
 		// Performs an attack on the target if the AI is in the attack state and the target is within range.
 		// Also, target should have a health component.
-		private void PerformAttack(GameObject target)
+		private void AttackToTarget(GameObject target)
 		{
 			// TODO: Should we get rid of this check?
 			// It's already done in CalculateState.
@@ -238,7 +256,12 @@ namespace Isometric2DGame.Characters.AI
 			attackModule.lastAttackTime = Time.time; // Reset the attack timer.
 		}
 
-		private void Patrol(Transform target)
+		protected virtual void Patrol()
+		{
+			PatrolToTarget(patrolModule.PatrolTarget);
+		}
+
+		private void PatrolToTarget(Transform target)
 		{
 			// We have to check if follow module is enabled, because it may override the patrol target.
 			// If follow module is enabled, we will try to find a target to follow first.
