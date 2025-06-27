@@ -54,7 +54,7 @@ namespace Isometric2DGame.Characters.AI
 	public class AttackModule : AIModule
 	{
 		[Header("Note: Attack Module depends on Follow Module to find the target.")]
-		public float attackDist = 1.5f;		// The distance at which the AI can attack the target.
+		public float attackDist = 0.5f;		// The distance at which the AI can attack the target.
 		public float attackDelay = 1f;		// The delay between attacks.
 		public float lastAttackTime = 0f;	// The time when the AI last attacked.
 		public float attackDamage = 10f;	// The damage dealt by the AI when it attacks.
@@ -335,6 +335,21 @@ namespace Isometric2DGame.Characters.AI
 				
 				Gizmos.DrawWireSphere(transform.position, followModule.detectionDist);
 			}
+
+			if (attackModule.IsEnabled && followModule.PrimaryTarget != null)
+			{
+				if (currentState == AIState.Attack)
+				{
+					Gizmos.color = Color.yellow;
+				}
+				else
+				{
+					Gizmos.color = Color.red;
+				}
+
+				Gizmos.DrawWireSphere(transform.position, attackModule.attackDist);
+			}
+
 			if (patrolModule.IsEnabled && currentState == AIState.Patrol && patrolModule.patrolPoints.Length > 0)
 			{
 				foreach (Transform point in patrolModule.patrolPoints)
