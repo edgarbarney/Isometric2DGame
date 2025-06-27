@@ -179,8 +179,7 @@ namespace Isometric2DGame.Characters.AI
 			if (!CanFollow(target))
 				return;
 
-			Vector2 direction = (target.transform.position - transform.position).normalized;
-			myRigidbody.MovePosition(myRigidbody.position + direction * moveSpeed);
+			ProcessMovementTowards(target.transform.position);
 		}
 
 		// Checks if the AI can follow the target based on distance.
@@ -244,7 +243,7 @@ namespace Isometric2DGame.Characters.AI
 			// We have to check if follow module is enabled, because it may override the patrol target.
 			// If follow module is enabled, we will try to find a target to follow first.
 			if (followModule.IsEnabled)
-				FindTargetToFollow();
+				followModule.PrimaryTarget = FindTargetToFollow();
 
 			if (target == null)
 				return;
