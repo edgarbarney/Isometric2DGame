@@ -286,5 +286,47 @@ namespace Isometric2DGame.Characters.AI
 			Vector2 direction = (target - (Vector2)transform.position);
 			myRigidbody.linearVelocity = direction.normalized * moveSpeed;
 		}
+
+		// ==========================================================
+		// Editor-only Stuff
+		// ==========================================================
+
+#if UNITY_EDITOR
+		// Draws gizmos in the editor to visualize the AI's detection distance and patrol points.
+		private void OnDrawGizmosSelected()
+		{
+			if (followModule.IsEnabled)
+			{
+				if (followModule.PrimaryTarget != null)
+				{
+					Gizmos.color = Color.magenta;
+					Gizmos.DrawLine(transform.position, followModule.PrimaryTarget.transform.position);
+					Gizmos.color = Color.red;
+				}
+				else
+				{
+					Gizmos.color = Color.yellow;
+				}
+				
+				Gizmos.DrawWireSphere(transform.position, followModule.detectionDist);
+			}
+			if (patrolModule.IsEnabled && currentState == AIState.Patrol && patrolModule.patrolPoints.Length > 0)
+			{
+				foreach (Transform point in patrolModule.patrolPoints)
+				{
+					if (patrolModule.PatrolTarget == point)
+					{
+						Gizmos.color = Color.green;
+					}
+					else
+					{
+						Gizmos.color = Color.blue;
+					}
+
+					Gizmos.DrawWireSphere(point.position, 0.2f);
+				}
+			}
+		}
+#endif
 	}
 }
