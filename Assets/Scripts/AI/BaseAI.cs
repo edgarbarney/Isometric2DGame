@@ -68,6 +68,7 @@ namespace Isometric2DGame.Characters.AI
 	{
 		protected Rigidbody2D myRigidbody;
 		protected Collider2D myCollider;
+		protected SpriteRenderer mySpriteRenderer;
 
 		protected AIState currentState = AIState.Idle;
 
@@ -88,6 +89,7 @@ namespace Isometric2DGame.Characters.AI
 			// Component caching
 			myRigidbody = GetComponent<Rigidbody2D>();
 			myCollider = GetComponent<Collider2D>();
+			mySpriteRenderer = transform.GetComponentInChildren<SpriteRenderer>(); // First found SpriteRenderer in the children
 
 			followModule.PrimaryTarget = null; // No initial target. Otherwise ai may try to follow a target prematurely.
 
