@@ -1,6 +1,7 @@
+using Isometric2DGame.Items;
 using System.Collections.Generic;
 using UnityEngine;
-using Isometric2DGame.Items;
+using UnityEngine.InputSystem;
 
 namespace Isometric2DGame.Characters.Player
 {
@@ -55,6 +56,8 @@ namespace Isometric2DGame.Characters.Player
 			}
 		}
 
+		private PlayerController playerController; // Reference to the player controller for interaction
+
 		[SerializeField]
 		private List<InventorySlot> itemSlots;
 		public InventorySlot[] ItemSlots => itemSlots.ToArray();
@@ -62,13 +65,61 @@ namespace Isometric2DGame.Characters.Player
 		[SerializeField]
 		private int maxSlots = 20;
 
+		private DroppedItem possiblePickup; // The item that the player can pick up on demand.
+		public DroppedItem PossiblePickup
+		{
+			get => possiblePickup;
+			set
+			{
+				possiblePickup = value;
+			}
+		}
+		
+		[SerializeField]
+		private float pickupRange = 0.5f; // Range within which the player can pick up items
+		[SerializeField]
+		private float pickupDelay = 0.1f; // Delay between pickup attempts
+		private float lastPickupTime = 0f;
+
 		private void Awake()
 		{
+			// Component caching.
+			playerController = GetComponent<PlayerController>();
+
 			// Pre-allocate the inventory slots
 			itemSlots = new List<InventorySlot>(maxSlots);
 			for (int i = 0; i < maxSlots; i++)
 			{
 				itemSlots.Add(InventorySlot.EmptySlot()); // Every slot starts empty
+			}
+		}
+
+		private void FixedUpdate()
+		{
+			// No need to boxcast every frame. Especially if the PC is powerful enough to run at 60 FPS or more.
+			// So FixedUpdate is better place to check for possible pickups.
+
+			Collider2D[] colliders = Physics2D.OverlapCircleAll(playerController.transform.position, pickupRange, LayerMask.GetMask("ItemPickup"));
+			float closestDistance = float.MaxValue;
+
+			if (colliders == null || colliders.Length == 0)
+			{
+				possiblePickup = null; // No pickups in range
+				return;
+			}
+
+			foreach (var collider in colliders)
+			{
+				DroppedItem item = collider.GetComponent<DroppedItem>();
+				if (item != null && item.Item != null)
+				{
+					float distance = Vector2.Distance(playerController.transform.position, item.transform.position);
+					if (distance < closestDistance)
+					{
+						closestDistance = distance;
+						possiblePickup = item; // Closest pickup!
+					}
+				}
 			}
 		}
 
@@ -254,6 +305,28 @@ namespace Isometric2DGame.Characters.Player
 			return count; // Remaining items that were not removed
 		}
 
+		public bool PossiblePickupInteract()
+		{
+			if (possiblePickup == null)
+				return false;
+
+			if (lastPickupTime + pickupDelay > Time.time)
+				return false;
+
+			if (IsFullCompletely())
+				return false;
+			
+			if (AddItem(possiblePickup.Item))
+			{
+				Destroy(possiblePickup.gameObject);
+				possiblePickup = null;
+				lastPickupTime = Time.time; // Reset the pickup delay
+				return true; 
+			}
+
+			return false;
+		}
+
 		public bool HasItem(BaseItem item)
 		{
 			if (item == null)
@@ -363,6 +436,24 @@ namespace Isometric2DGame.Characters.Player
 		// Placeholder Inventory Debug GUI
 		public void OnGUI()
 		{
+			if (possiblePickup != null)
+			{
+				// Show a small box with the item name and the interct key to pick it up
+				// Use possiblePickup.Item.ItemName and playerController.InteractKey to display the pickup message
+				// Use possiblePickup.GetTooltipPosition() to position the tooltip
+
+				Vector2 tooltipPosition = playerController.PlayerCamera.WorldToScreenPoint(possiblePickup.GetTooltipPosition());
+
+				// Ugh, this is a bit hacky, but it works for now.
+				string keyName = playerController.MyPlayerInput.actions["Interact"].bindings.Count > 0 ? InputControlPath.ToHumanReadableString(playerController.MyPlayerInput.actions["Interact"].bindings[0].effectivePath, InputControlPath.HumanReadableStringOptions.OmitDevice) : "";
+
+				// Theese are off a bit. It have to be centre.
+				GUILayout.BeginArea(new Rect(tooltipPosition.x - 100, Screen.height - tooltipPosition.y - 50, 200, 50));
+				GUILayout.Box($"Press {keyName} to pick up {possiblePickup.Item.ItemName}");
+				GUILayout.EndArea();
+			}
+
+
 			if (itemSlots == null || itemSlots.Count == 0)
 				return; // No slots to display yet
 

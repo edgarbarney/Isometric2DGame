@@ -12,6 +12,16 @@ namespace Isometric2DGame.Characters.Player
 		}
 
 		private Rigidbody2D myRigidbody;
+		private PlayerInput myPlayerInput;
+		public PlayerInput MyPlayerInput
+		{
+			get { return myPlayerInput; }
+		}
+		private Camera playerCamera;
+		public Camera PlayerCamera
+		{
+			get { return playerCamera; }
+		}
 
 		[SerializeField]
 		private float normalMoveSpeed = 5; // Speed at which the player moves, can be adjusted in the inspector.
@@ -35,6 +45,8 @@ namespace Isometric2DGame.Characters.Player
 		{
 			// Component caching
 			myRigidbody = GetComponent<Rigidbody2D>();
+			myPlayerInput = GetComponent<PlayerInput>();
+			playerCamera = GameObject.Find("PlayerCameraSystem").GetComponentInChildren<Camera>();
 		}
 
 		private void FixedUpdate()
@@ -75,6 +87,11 @@ namespace Isometric2DGame.Characters.Player
 		{
 			moveInputVector = context.ReadValue<Vector2>();
 		}
-		
+
+		public void OnInteract(InputAction.CallbackContext context)
+		{
+			_ = PlayerInventory.Instance.PossiblePickupInteract();
+		}
+
 	}
 }

@@ -132,7 +132,6 @@ GameObject:
   - component: {fileID: 5443191548687422371}
   - component: {fileID: 8864110494416644548}
   - component: {fileID: 5664371602170210885}
-  - component: {fileID: 8331739797251956585}
   - component: {fileID: 5910875623874837323}
   m_Layer: 8
   m_Name: Player
@@ -263,18 +262,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75a74a8bdd40a754f8a611aed4f64443, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &8331739797251956585
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8917563347305144616}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e7b6f38d415c074fa8edbea917138f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  itemSlots: []
+  maxSlots: 20
+  pickupRange: 0.5
+  pickupDelay: 0.1
 --- !u!114 &5910875623874837323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,7 +308,20 @@ MonoBehaviour:
     m_ActionId: 351f2ccd-1f9f-44bf-9bec-d62ac5c5f408
     m_ActionName: 'Player/Move[/Keyboard/w,/Keyboard/upArrow,/Keyboard/s,/Keyboard/downArrow,/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]'
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 5443191548687422371}
+        m_TargetAssemblyTypeName: Isometric2DGame.Characters.Player.PlayerController,
+          Assembly-CSharp
+        m_MethodName: OnInteract
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: 852140f2-7766-474d-8707-702459ba45f3
     m_ActionName: 'Player/Interact[/Keyboard/e]'
   - m_PersistentCalls:

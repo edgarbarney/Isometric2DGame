@@ -1,3 +1,4 @@
+using Isometric2DGame.Characters.Player;
 using UnityEngine;
 
 namespace Isometric2DGame.Items
@@ -25,6 +26,7 @@ namespace Isometric2DGame.Items
 		private Collider2D myCollider;
 		private SpriteRenderer mySpriteRenderer;
 		private GameObject mySpriteObject;
+		private Transform myTooltipTransform;
 
 		[SerializeField]
 		private BaseItem item;
@@ -52,6 +54,7 @@ namespace Isometric2DGame.Items
 			myCollider = GetComponent<Collider2D>();
 			mySpriteRenderer = GetComponentInChildren<SpriteRenderer>();
 			mySpriteObject = mySpriteRenderer.gameObject;
+			myTooltipTransform = mySpriteObject.transform.Find("TooltipPos");
 		}
 
 		private void Start()
@@ -73,6 +76,17 @@ namespace Isometric2DGame.Items
 			// Anmate the item with a bobbing effect.
 			float newY = Mathf.Sin(Time.time * bobbingSpeed) * bobbingHeight;
 			mySpriteObject.transform.localPosition = new Vector3(mySpriteObject.transform.localPosition.x, newY, mySpriteObject.transform.localPosition.z);
+		}
+
+		private void OnTriggerEnter2D(Collider2D other)
+		{
+			TryPickUp(other.gameObject);
+		}
+
+		private void OnTriggerExit2D(Collider2D other)
+		{
+			// Unused for now
+			//EndPickUp(other.gameObject);
 		}
 
 		// Refresh the name and icon of the dropped item.
@@ -97,7 +111,7 @@ namespace Isometric2DGame.Items
 			myRigidbody.angularVelocity = Random.Range(-180f, 180f); // Add some random rotation
 		}
 
-		public void PickedUp(GameObject picker)
+		public void TryPickUp(GameObject picker)
 		{
 			if (picker == null || Item == null)
 				return;
@@ -105,23 +119,26 @@ namespace Isometric2DGame.Items
 			if (!picker.CompareTag("Player"))
 			{
 				// Non-player characters will just use the item directly
-				if (!Item.Use(picker))
-					return;
-			}
-			else
-			{
-				var inv = picker.GetComponent<Characters.Player.PlayerInventory>();
-				if (inv != null && inv.AddItem(Item))
+				if (Item.Use(picker))
 				{
-					// Added!
-				}
-				else
-				{
-					return;
+					Destroy(gameObject);
 				}
 			}
 
-			Destroy(gameObject);
+			// Player part is handled in the PlayerInventory
+		}
+
+		public void EndPickUp(GameObject picker)
+		{ 	
+			if (picker == null || Item == null)
+				return;
+
+			// Player part is handled in the PlayerInventory
+		}
+
+		public Vector2 GetTooltipPosition()
+		{
+			return mySpriteObject.transform.position;
 		}
 
 		static void DropItem(BaseItem item, Vector2 position, bool fly = true)
