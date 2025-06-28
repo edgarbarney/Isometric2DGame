@@ -1275,6 +1275,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5664371602170210885, guid: 153bea604bff19843afcc2ed443e8bea, type: 3}
+      propertyPath: maxItems
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664371602170210885, guid: 153bea604bff19843afcc2ed443e8bea, type: 3}
+      propertyPath: maxSlots
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 7084197100006120630, guid: 153bea604bff19843afcc2ed443e8bea, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.922
