@@ -94,11 +94,15 @@ namespace Isometric2DGame.Characters.Player
 			}
 		}
 
-		private void FixedUpdate()
+		private void Start()
 		{
-			// No need to boxcast every frame. Especially if the PC is powerful enough to run at 60 FPS or more.
-			// So FixedUpdate is better place to check for possible pickups.
+			// No need to check it every frame
+			// Every tenth of a second is enough to check for pickups
+			InvokeRepeating(nameof(CheckForPickups), 0.0f, 0.1f);
+		}
 
+		private void CheckForPickups()
+		{
 			Collider2D[] colliders = Physics2D.OverlapCircleAll(playerController.transform.position, pickupRange, LayerMask.GetMask("ItemPickup"));
 			float closestDistance = float.MaxValue;
 
