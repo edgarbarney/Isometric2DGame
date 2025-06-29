@@ -264,6 +264,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemSlots: []
   maxSlots: 20
+  minSlotUIPadding: 20
   pickupRange: 0.5
   pickupDelay: 0.1
 --- !u!114 &5910875623874837323
@@ -364,6 +365,23 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5443191548687422371}
+        m_TargetAssemblyTypeName: Isometric2DGame.Characters.Player.PlayerController,
+          Assembly-CSharp
+        m_MethodName: OnInventory
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 98d72e2f-e078-4af6-9c81-dcd51118b8d9
+    m_ActionName: 'Player/Inventory[/Keyboard/tab,/Keyboard/i]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: Keyboard&Mouse
   m_DefaultActionMap: Player

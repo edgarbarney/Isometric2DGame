@@ -141,7 +141,7 @@ namespace Isometric2DGame.Items
 			return mySpriteObject.transform.position;
 		}
 
-		static void DropItem(BaseItem item, Vector2 position, bool fly = true)
+		public static void DropItem(BaseItem item, Vector2 position, bool fly = true)
 		{
 			if (item == null) 
 				return;

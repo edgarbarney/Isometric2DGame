@@ -1,7 +1,10 @@
-using Isometric2DGame.Items;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using Isometric2DGame.Items;
+using Isometric2DGame.UI;
 
 namespace Isometric2DGame.Characters.Player
 {
@@ -56,14 +59,34 @@ namespace Isometric2DGame.Characters.Player
 			}
 		}
 
-		private PlayerController playerController; // Reference to the player controller for interaction
+		private PlayerController playerController;
+		private GameObject inventoryUISlotPrefab;
 
 		[SerializeField]
-		private List<InventorySlot> itemSlots;
+		private List<InventorySlot> itemSlots = new();
 		public InventorySlot[] ItemSlots => itemSlots.ToArray();
+
+		private UIItemSlot lastSelectedItemSlot = null;
+		public UIItemSlot LastSelectedItemSlot
+		{
+			get { return lastSelectedItemSlot; }
+			set { lastSelectedItemSlot = value; }
+		}
+
+		private List<UIItemSlot> uiItemSlots = new(); // Cache of UI item slots for quick access
+
+		public RectTransform inventoryUISlotHolder;
+
+		private bool isInventoryUIOpen = false;
+		public bool IsInventoryUIOpen
+		{
+			get { return isInventoryUIOpen; }
+		}
 
 		[SerializeField]
 		private int maxSlots = 20;
+		[SerializeField]
+		private float minSlotUIPadding = 20f; // Minimum padding around each inventory slot in the UI
 
 		private DroppedItem possiblePickup; // The item that the player can pick up on demand.
 		public DroppedItem PossiblePickup
@@ -85,13 +108,19 @@ namespace Isometric2DGame.Characters.Player
 		{
 			// Component caching.
 			playerController = GetComponent<PlayerController>();
+			inventoryUISlotPrefab = Resources.Load<GameObject>("Prefabs/UI/InventoryItemSlot");
+
+			if (inventoryUISlotHolder == null)
+			{
+				Debug.LogError("InventorySlotHolder not found in the scene. Please set it in the inspector");
+				return;
+			}
 
 			// Pre-allocate the inventory slots
 			itemSlots = new List<InventorySlot>(maxSlots);
-			for (int i = 0; i < maxSlots; i++)
-			{
-				itemSlots.Add(InventorySlot.EmptySlot()); // Every slot starts empty
-			}
+			Resize(maxSlots); // Initialize the inventory with the maximum slots
+
+			uiItemSlots = new List<UIItemSlot>(maxSlots);
 		}
 
 		private void Start()
@@ -99,6 +128,9 @@ namespace Isometric2DGame.Characters.Player
 			// No need to check it every frame
 			// Every tenth of a second is enough to check for pickups
 			InvokeRepeating(nameof(CheckForPickups), 0.0f, 0.1f);
+
+			// Set indices
+			RefreshUISlots();
 		}
 
 		private void CheckForPickups()
@@ -173,6 +205,25 @@ namespace Isometric2DGame.Characters.Player
 			return slot.IsEmpty();
 		}
 
+		public void SetSelectedItem(UIItemSlot uiItemSlot)
+		{
+			foreach(var slot in uiItemSlots)
+			{
+				if (slot != null)
+				{
+					if (slot.SlotIndex == uiItemSlot.SlotIndex)
+					{
+						lastSelectedItemSlot = slot; // Set the last selected item slot
+						slot.MyImage.color = uiItemSlot.selectedColor;
+					}
+					else
+					{
+						slot.MyImage.color = uiItemSlot.UnselectedColor;
+					}
+				}
+			}
+		}
+
 		public void Resize(int newSize)
 		{
 			if (newSize < 0 && newSize == itemSlots.Count)
@@ -186,11 +237,140 @@ namespace Isometric2DGame.Characters.Player
 			{
 				for (int i = itemSlots.Count; i < newSize; i++)
 				{
-					itemSlots.Add(null);
+					itemSlots.Add(InventorySlot.EmptySlot());
 				}
 			}
 
-			maxSlots = newSize; // Update the maximum slots
+			maxSlots = newSize;
+
+			ResizeUI();
+			RefreshUISlots();
+		}
+
+		private void RefreshUISlots()
+		{
+			uiItemSlots.Clear();
+
+			int index = 0;
+			foreach (Transform child in inventoryUISlotHolder)
+			{
+				UIItemSlot uiSlot = child.GetComponent<UIItemSlot>();
+				if (uiSlot != null)
+				{
+					uiSlot.SetSlot(index);
+					uiItemSlots.Add(uiSlot); // Cache the UI item slot for quick access
+				}
+
+				index++;
+			}
+		}
+
+		private void ResizeUI()
+		{
+			// No need to cache inventory, resize will be called very rarely.
+			GridLayoutGroup gridLayout = inventoryUISlotHolder.GetComponent<GridLayoutGroup>();
+
+			foreach (Transform child in inventoryUISlotHolder)
+			{
+				Destroy(child.gameObject);
+			}
+
+			for (int i = 0; i < maxSlots; i++)
+			{
+				GameObject slotObject = Instantiate(inventoryUISlotPrefab, inventoryUISlotHolder);
+				slotObject.name = $"InventorySlot_{i}";
+			}
+
+			// I love maths and over-engineering! :D:D:D:D:D: (Sylvia: Pizzicato)
+			// This lovely piece of code will resize the inventory UI to fit the available space
+
+			float containerWidth = inventoryUISlotHolder.rect.width;
+			float containerHeight = inventoryUISlotHolder.rect.height;
+
+			float usableWidth = containerWidth - 2 * minSlotUIPadding;
+			float usableHeight = containerHeight - 2 * minSlotUIPadding;
+
+			int bestCols = 1;
+			int bestRows = maxSlots;
+			float bestSlotSize = 0;
+			float bestSpacingX = 0;
+			float bestSpacingY = 0;
+
+			for (int cols = 1; cols <= maxSlots; cols++)
+			{
+				int rows = Mathf.CeilToInt((float)maxSlots / cols);
+
+				if (rows <= 0)
+					continue;
+
+				float slotSize = Mathf.Floor(Mathf.Min(usableWidth / cols, usableHeight / rows));
+				float spacingX = (cols > 1) ? (usableWidth - cols * slotSize) / (cols - 1) : 0f;
+				float spacingY = (rows > 1) ? (usableHeight - rows * slotSize) / (rows - 1) : 0f;
+
+				if (spacingX < 0 || spacingY < 0)
+					continue;
+
+				if (slotSize > bestSlotSize)
+				{
+					bestSlotSize = slotSize;
+					bestCols = cols;
+					bestRows = rows;
+					bestSpacingX = spacingX;
+					bestSpacingY = spacingY;
+				}
+			}
+
+			gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount; // Already set in the inspector, but just to be sure
+			gridLayout.constraintCount = bestCols;
+			gridLayout.cellSize = new Vector2(bestSlotSize, bestSlotSize);
+			gridLayout.spacing = new Vector2(bestSpacingX, bestSpacingY);
+			gridLayout.padding = new RectOffset(Mathf.RoundToInt(minSlotUIPadding), Mathf.RoundToInt(minSlotUIPadding), Mathf.RoundToInt(minSlotUIPadding), Mathf.RoundToInt(minSlotUIPadding));
+		}
+
+		public void ToggleInventoryUI(bool setOpen)
+		{
+			isInventoryUIOpen = setOpen;
+			if (isInventoryUIOpen)
+			{
+				//ResizeUI();
+				//RefreshUISlots();
+				inventoryUISlotHolder.parent.gameObject.SetActive(true);
+			}
+			else
+			{
+				inventoryUISlotHolder.parent.gameObject.SetActive(false);
+			}
+		}
+
+		public void UseUISelectedItem()
+		{
+			if (lastSelectedItemSlot == null)
+				return;
+
+			InventorySlot slot = itemSlots[lastSelectedItemSlot.SlotIndex];
+
+			if (!IsSlotEmpty(slot))
+			{
+				slot.Item.Use(playerController.gameObject);
+				DeductItemFromSlot(lastSelectedItemSlot.SlotIndex, 1);
+			}
+
+			RefreshUISlots();
+		}
+
+		public void DropUISelectedItem()
+		{
+			if (lastSelectedItemSlot == null)
+				return;
+
+			InventorySlot slot = itemSlots[lastSelectedItemSlot.SlotIndex];
+
+			if (!IsSlotEmpty(slot))
+			{
+				DroppedItem.DropItem(slot.Item, transform.position);
+				DeductItemFromSlot(lastSelectedItemSlot.SlotIndex, 1);
+				RefreshUISlots();
+			}
 		}
 
 		// Add an item to the inventory
@@ -243,7 +423,26 @@ namespace Isometric2DGame.Characters.Player
 				}
 			}
 
+			RefreshUISlots();
+
 			return count; // Remaining item count
+		}
+
+		public bool DeductItemFromSlot(int slotIndex, int count)
+		{
+			if (slotIndex < 0 || slotIndex >= itemSlots.Count)
+				return false;
+
+			InventorySlot slot = itemSlots[slotIndex];
+			if (IsSlotEmpty(slot) || slot.Count < count)
+				return false;
+
+			slot.Count -= count;
+			if (slot.Count <= 0)
+			{
+				ClearSlot(slotIndex);
+			}
+			return true;
 		}
 
 		public bool RemoveItem(BaseItem item)
@@ -456,24 +655,6 @@ namespace Isometric2DGame.Characters.Player
 				GUILayout.Box($"Press {keyName} to pick up {possiblePickup.Item.ItemName}");
 				GUILayout.EndArea();
 			}
-
-
-			if (itemSlots == null || itemSlots.Count == 0)
-				return; // No slots to display yet
-
-			GUILayout.BeginArea(new Rect(10, 10, 200, 800));
-			GUILayout.Label("Inventory:");
-			foreach (var slot in itemSlots)
-			{
-				if (IsSlotEmpty(slot))
-				{
-					GUILayout.Label("Empty Slot");
-					continue; // Skip empty slots
-				}
-
-				GUILayout.Label($"{slot.Item.ItemName} x{slot.Count}");
-			}
-			GUILayout.EndArea();
 		}
 	}
 }

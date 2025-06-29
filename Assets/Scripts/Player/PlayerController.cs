@@ -90,8 +90,16 @@ namespace Isometric2DGame.Characters.Player
 
 		public void OnInteract(InputAction.CallbackContext context)
 		{
-			_ = PlayerInventory.Instance.PossiblePickupInteract();
+			if (context.performed)
+				_ = PlayerInventory.Instance.PossiblePickupInteract();
 		}
 
+		public void OnInventory(InputAction.CallbackContext context)
+		{
+			if (context.performed)
+			{
+				PlayerInventory.Instance.ToggleInventoryUI(!PlayerInventory.Instance.IsInventoryUIOpen);
+			}
+		}
 	}
 }
