@@ -69,6 +69,7 @@ namespace Isometric2DGame.Characters.AI
 		protected Rigidbody2D myRigidbody;
 		protected Collider2D myCollider;
 		protected SpriteRenderer mySpriteRenderer;
+		public CharacterSpriteManager characterSpriteManager;
 
 		protected AIState currentState = AIState.Idle;
 
@@ -309,6 +310,9 @@ namespace Isometric2DGame.Characters.AI
 		private void ProcessMovementTowards(Vector2 target)
 		{
 			Vector2 direction = (target - (Vector2)transform.position);
+
+			characterSpriteManager.SetSprite(WorldData.GetDirectionFromVector(direction.normalized));
+
 			myRigidbody.linearVelocity = direction.normalized * moveSpeed;
 		}
 

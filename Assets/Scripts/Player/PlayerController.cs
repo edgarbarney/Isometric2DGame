@@ -11,6 +11,20 @@ namespace Isometric2DGame.Characters.Player
 			Instant, // Instant acceleration, immediate change in speed.
 		}
 
+		private static PlayerController instance;
+		public static PlayerController Instance
+		{
+			get
+			{
+				if (instance == null)
+				{
+					instance = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+				}
+
+				return instance;
+			}
+		}
+
 		private Rigidbody2D myRigidbody;
 		private PlayerInput myPlayerInput;
 		public PlayerInput MyPlayerInput
@@ -21,6 +35,11 @@ namespace Isometric2DGame.Characters.Player
 		public Camera PlayerCamera
 		{
 			get { return playerCamera; }
+		}
+		private PlayerSpriteManager playerSpriteManager;
+		public PlayerSpriteManager PlayerSpriteManager
+		{
+			get { return playerSpriteManager; }
 		}
 
 		[SerializeField]
@@ -47,6 +66,7 @@ namespace Isometric2DGame.Characters.Player
 			myRigidbody = GetComponent<Rigidbody2D>();
 			myPlayerInput = GetComponent<PlayerInput>();
 			playerCamera = GameObject.Find("PlayerCameraSystem").GetComponentInChildren<Camera>();
+			playerSpriteManager = GetComponentInChildren<PlayerSpriteManager>();
 		}
 
 		private void FixedUpdate()
@@ -58,6 +78,9 @@ namespace Isometric2DGame.Characters.Player
 		{
 			if (direction == Vector2.zero)
 				return;
+
+			// Player Sprite Stuff
+			playerSpriteManager.SetPlayerSprite(WorldData.GetDirectionFromVector(direction));
 
 			// Set the move speed based on the acceleration state.
 			//

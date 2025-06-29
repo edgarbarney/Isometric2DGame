@@ -401,6 +401,23 @@ namespace Isometric2DGame.Characters.Player
 			}
 		}
 
+		public void DropEveryItem()
+		{
+			if (IsEmpty())
+				return;
+
+			for (int i = itemSlots.Count - 1; i >= 0; i--)
+			{
+				InventorySlot slot = itemSlots[i];
+				if (!IsSlotEmpty(slot))
+				{
+					DroppedItem.DropItem(slot.Item, transform.position);
+					ClearSlot(i);
+				}
+			}
+			RefreshUISlots();
+		}
+
 		public void HoverSlot(int slotIndex)
 		{
 			if (slotIndex < 0 || slotIndex >= itemSlots.Count)

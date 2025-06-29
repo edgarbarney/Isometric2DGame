@@ -41,6 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5425397200455389507}
   - component: {fileID: 3299681472601272073}
+  - component: {fileID: 8966412873738853861}
   m_Layer: 8
   m_Name: Sprite
   m_TagString: Untagged
@@ -118,6 +119,27 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8966412873738853861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 814197599456393126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2588faa7a0083d4eb80eb4689f76c9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteSet:
+    NE: {fileID: 21300000, guid: 372849670c421034ca36c039a65df7a4, type: 3}
+    E: {fileID: 21300000, guid: 9c5a51d30d76f5d468c63a6f7adc1a00, type: 3}
+    SE: {fileID: 21300000, guid: ffe9c02adac1abf44951923b853a5bc0, type: 3}
+    S: {fileID: 21300000, guid: def35f95fe765eb4ab8f4e3ebbd9b779, type: 3}
+    SW: {fileID: 21300000, guid: b102e18933d2318458d511f693e81d90, type: 3}
+    W: {fileID: 21300000, guid: 7371ce605701fc24788c3fd52fd6b730, type: 3}
+    NW: {fileID: 21300000, guid: 1be191352b070594d920737984124374, type: 3}
+    N: {fileID: 21300000, guid: 3549f5216ab3dbd44a10f03477ae13bb, type: 3}
 --- !u!1 &8917563347305144616
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +152,7 @@ GameObject:
   - component: {fileID: 7450448403448303996}
   - component: {fileID: 3037389962620731850}
   - component: {fileID: 5443191548687422371}
-  - component: {fileID: 8864110494416644548}
+  - component: {fileID: 1217376468354349791}
   - component: {fileID: 5664371602170210885}
   - component: {fileID: 5910875623874837323}
   m_Layer: 8
@@ -237,7 +259,7 @@ MonoBehaviour:
   instantMoveSpeed: 7.5
   moveSpeed: 0
   accelerationState: 1
---- !u!114 &8864110494416644548
+--- !u!114 &1217376468354349791
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -246,10 +268,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8917563347305144616}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45da56579be76c6498159d2ab3d3e996, type: 3}
+  m_Script: {fileID: 11500000, guid: a938118f0f3e5934ead88079cc9bcbd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   health: 50
+  characterCorpsePrefab: {fileID: 4269862768345327519, guid: 7c6f0b656b8b5cd4bb86cc904dd313af, type: 3}
 --- !u!114 &5664371602170210885
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -263,6 +286,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemSlots: []
+  inventoryUISlotHolder: {fileID: 0}
+  uIPickupItemPrompt: {fileID: 0}
+  uIItemSlotInfo: {fileID: 0}
   maxSlots: 20
   minSlotUIPadding: 20
   pickupRange: 0.5
