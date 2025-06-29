@@ -1,6 +1,6 @@
-using Isometric2DGame.Characters.Player;
 using System.Runtime.Serialization;
 using UnityEngine;
+using Isometric2DGame.Characters.Player;
 
 namespace Isometric2DGame.UI
 {

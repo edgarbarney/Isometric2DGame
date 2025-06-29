@@ -1,11 +1,12 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using Isometric2DGame.Characters.Player;
 
 namespace Isometric2DGame.UI
 {
-	public class UIItemSlot : MonoBehaviour
+	public class UIItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 	{
 		[SerializeField]
 		private Image myImage;
@@ -49,6 +50,14 @@ namespace Isometric2DGame.UI
 		public void SetSlot(int index)
 		{
 			slotIndex = index;
+			
+			if (PlayerInventory.Instance.ItemSlots.Length <= slotIndex || slotIndex < 0)
+			{
+				myChildImage.sprite = emptySprite;
+				myCountText.text = string.Empty;
+				return;
+			}
+
 			InventorySlot slotData = PlayerInventory.Instance.ItemSlots[slotIndex];
 
 			if (slotData == null || slotData.Item == null)
@@ -65,6 +74,18 @@ namespace Isometric2DGame.UI
 		public void OnClick()
 		{
 			PlayerInventory.Instance.SetSelectedItem(this);
+		}
+
+		// Hover
+		public void OnPointerEnter(PointerEventData eventData)
+		{
+			PlayerInventory.Instance.HoverSlot(slotIndex);
+		}
+
+		// Exit hover
+		public void OnPointerExit(PointerEventData eventData)
+		{
+			PlayerInventory.Instance.ExitHoverSlot();
 		}
 	}
 }

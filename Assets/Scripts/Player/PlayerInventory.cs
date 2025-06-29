@@ -76,6 +76,8 @@ namespace Isometric2DGame.Characters.Player
 		private List<UIItemSlot> uiItemSlots = new(); // Cache of UI item slots for quick access
 
 		public RectTransform inventoryUISlotHolder;
+		public UIPickupItemPrompt uIPickupItemPrompt;
+		public UIItemSlotInfo uIItemSlotInfo;
 
 		private bool isInventoryUIOpen = false;
 		public bool IsInventoryUIOpen
@@ -92,9 +94,13 @@ namespace Isometric2DGame.Characters.Player
 		public DroppedItem PossiblePickup
 		{
 			get => possiblePickup;
-			set
+			private set
 			{
 				possiblePickup = value;
+				uIPickupItemPrompt.SetPickupItem(possiblePickup);
+				uIPickupItemPrompt.gameObject.SetActive(possiblePickup != null);
+
+				uIPickupItemPrompt.RefreshPickupKey(playerController);
 			}
 		}
 		
@@ -113,7 +119,16 @@ namespace Isometric2DGame.Characters.Player
 			if (inventoryUISlotHolder == null)
 			{
 				Debug.LogError("InventorySlotHolder not found in the scene. Please set it in the inspector");
-				return;
+			}
+
+			if (uIPickupItemPrompt == null)
+			{
+				Debug.LogError("UIPickupItemPrompt not found in the scene. Please set it in the inspector");
+			}
+
+			if (uIItemSlotInfo == null)
+			{
+				Debug.LogError("UIItemSlotInfo not found in the scene. Please set it in the inspector");
 			}
 
 			// Pre-allocate the inventory slots
@@ -131,6 +146,18 @@ namespace Isometric2DGame.Characters.Player
 
 			// Set indices
 			RefreshUISlots();
+
+			// Make sure the inventory UI is resized correctly
+			Invoke(nameof(ResizeUI), 0.1f); // Delay to ensure the UI is ready before resizing
+		}
+
+		private void Update()
+		{
+			if (possiblePickup == null)
+				return;
+
+			Vector2 tooltipPos = playerController.PlayerCamera.WorldToScreenPoint(PossiblePickup.GetTooltipPosition());
+			uIPickupItemPrompt.SetPosition(tooltipPos);
 		}
 
 		private void CheckForPickups()
@@ -140,7 +167,7 @@ namespace Isometric2DGame.Characters.Player
 
 			if (colliders == null || colliders.Length == 0)
 			{
-				possiblePickup = null; // No pickups in range
+				PossiblePickup = null; // No pickups in range
 				return;
 			}
 
@@ -153,7 +180,7 @@ namespace Isometric2DGame.Characters.Player
 					if (distance < closestDistance)
 					{
 						closestDistance = distance;
-						possiblePickup = item; // Closest pickup!
+						PossiblePickup = item; // Closest pickup!
 					}
 				}
 			}
@@ -244,7 +271,6 @@ namespace Isometric2DGame.Characters.Player
 			maxSlots = newSize;
 
 			ResizeUI();
-			RefreshUISlots();
 		}
 
 		private void RefreshUISlots()
@@ -325,6 +351,8 @@ namespace Isometric2DGame.Characters.Player
 			gridLayout.cellSize = new Vector2(bestSlotSize, bestSlotSize);
 			gridLayout.spacing = new Vector2(bestSpacingX, bestSpacingY);
 			gridLayout.padding = new RectOffset(Mathf.RoundToInt(minSlotUIPadding), Mathf.RoundToInt(minSlotUIPadding), Mathf.RoundToInt(minSlotUIPadding), Mathf.RoundToInt(minSlotUIPadding));
+
+			RefreshUISlots();
 		}
 
 		public void ToggleInventoryUI(bool setOpen)
@@ -371,6 +399,33 @@ namespace Isometric2DGame.Characters.Player
 				DeductItemFromSlot(lastSelectedItemSlot.SlotIndex, 1);
 				RefreshUISlots();
 			}
+		}
+
+		public void HoverSlot(int slotIndex)
+		{
+			if (slotIndex < 0 || slotIndex >= itemSlots.Count)
+			{
+				ExitHoverSlot();
+				return;
+			}
+
+			InventorySlot slot = itemSlots[slotIndex];
+
+			if (IsSlotEmpty(slot))
+			{
+				ExitHoverSlot();
+			}
+			else
+			{
+				uIItemSlotInfo.SetItem(slot.Item);
+				uIItemSlotInfo.gameObject.SetActive(true);
+			}
+		}
+
+		public void ExitHoverSlot()
+		{
+			uIItemSlotInfo.SetItem(null);
+			uIItemSlotInfo.gameObject.SetActive(false);
 		}
 
 		// Add an item to the inventory
@@ -519,10 +574,10 @@ namespace Isometric2DGame.Characters.Player
 			if (IsFullCompletely())
 				return false;
 			
-			if (AddItem(possiblePickup.Item))
+			if (AddItem(PossiblePickup.Item))
 			{
-				Destroy(possiblePickup.gameObject);
-				possiblePickup = null;
+				Destroy(PossiblePickup.gameObject);
+				PossiblePickup = null;
 				lastPickupTime = Time.time; // Reset the pickup delay
 				return true; 
 			}
@@ -634,27 +689,6 @@ namespace Isometric2DGame.Characters.Player
 			}
 
 			return null; // No stackable item found
-		}
-
-		// Placeholder Inventory Debug GUI
-		public void OnGUI()
-		{
-			if (possiblePickup != null)
-			{
-				// Show a small box with the item name and the interct key to pick it up
-				// Use possiblePickup.Item.ItemName and playerController.InteractKey to display the pickup message
-				// Use possiblePickup.GetTooltipPosition() to position the tooltip
-
-				Vector2 tooltipPosition = playerController.PlayerCamera.WorldToScreenPoint(possiblePickup.GetTooltipPosition());
-
-				// Ugh, this is a bit hacky, but it works for now.
-				string keyName = playerController.MyPlayerInput.actions["Interact"].bindings.Count > 0 ? InputControlPath.ToHumanReadableString(playerController.MyPlayerInput.actions["Interact"].bindings[0].effectivePath, InputControlPath.HumanReadableStringOptions.OmitDevice) : "";
-
-				// Theese are off a bit. It have to be centre.
-				GUILayout.BeginArea(new Rect(tooltipPosition.x - 100, Screen.height - tooltipPosition.y - 50, 200, 50));
-				GUILayout.Box($"Press {keyName} to pick up {possiblePickup.Item.ItemName}");
-				GUILayout.EndArea();
-			}
 		}
 	}
 }
