@@ -150,6 +150,8 @@ MonoBehaviour:
   myImage: {fileID: 6326927079928326074}
   myChildImage: {fileID: 8484211592046309774}
   myCountText: {fileID: 4631513988946913245}
+  emptySprite: {fileID: 0}
+  unselectedColor: {r: 1, g: 1, b: 1, a: 1}
   selectedColor: {r: 0.16522783, g: 0.745283, b: 0.7034449, a: 1}
 --- !u!1 &5509353479393545055
 GameObject:

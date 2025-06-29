@@ -32,43 +32,36 @@ namespace Isometric2DGame.UI
 		{
 			get { return slotIndex; }
 		}
-		private Sprite emptySprite;
 
-		private Color unselectedColor;
-		public Color UnselectedColor
-		{
-			get { return unselectedColor; }
-		}
+		public Sprite emptySprite;
+		public Color unselectedColor;
 		public Color selectedColor;
-
-		private void Awake()
-		{
-			emptySprite = myChildImage.sprite;
-			unselectedColor = myImage.color;
-		}
 
 		public void SetSlot(int index)
 		{
 			slotIndex = index;
-			
-			if (PlayerInventory.Instance.ItemSlots.Length <= slotIndex || slotIndex < 0)
+
+			if (index < 0 || index >= PlayerInventory.Instance.ItemSlots.Length)
 			{
-				myChildImage.sprite = emptySprite;
-				myCountText.text = string.Empty;
+				ClearSlot();
 				return;
 			}
 
-			InventorySlot slotData = PlayerInventory.Instance.ItemSlots[slotIndex];
-
-			if (slotData == null || slotData.Item == null)
+			InventorySlot slotData = PlayerInventory.Instance.ItemSlots[index];
+			if (slotData.Item == null)
 			{
-				myChildImage.sprite = emptySprite;
-				myCountText.text = string.Empty;
+				ClearSlot();
 				return;
 			}
 
-			myChildImage.sprite = slotData.Item != null ? slotData.Item.ItemIcon : emptySprite;
+			myChildImage.sprite = slotData.Item.ItemIcon;
 			myCountText.text = slotData.Count > 1 ? slotData.Count.ToString() : string.Empty;
+		}
+
+		private void ClearSlot()
+		{
+			myChildImage.sprite = emptySprite;
+			myCountText.text = string.Empty;
 		}
 
 		public void OnClick()

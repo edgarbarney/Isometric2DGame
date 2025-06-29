@@ -245,7 +245,7 @@ namespace Isometric2DGame.Characters.Player
 					}
 					else
 					{
-						slot.MyImage.color = uiItemSlot.UnselectedColor;
+						slot.MyImage.color = uiItemSlot.unselectedColor;
 					}
 				}
 			}
