@@ -91,7 +91,7 @@ namespace Isometric2DGame.Characters.Player
 				default:
 				case AccelerationState.Normal:
 					MoveSpeed = normalMoveSpeed; // Set the move speed to normal speed for smooth acceleration.
-					myRigidbody.linearDamping = 10; // Disable damping for instant acceleration.
+					myRigidbody.linearDamping = 10; // Fix damping for smooth acceleration.
 					break;
 				case AccelerationState.Instant:
 					MoveSpeed = instantMoveSpeed; // Set the move speed to instant speed for immediate changes.
