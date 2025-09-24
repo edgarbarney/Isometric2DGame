@@ -12,6 +12,14 @@ namespace Isometric2DGame.Characters
 			protected set { health = value; }
 		}
 
+		[SerializeField]
+		private float maxHealth = 10;
+		public float MaxHealth
+		{
+			get => maxHealth;
+			protected set { maxHealth = value; }
+		}
+
 		private bool isDead = false;
 		public bool IsDead
 		{
@@ -20,10 +28,34 @@ namespace Isometric2DGame.Characters
 		}
 
 		public GameObject characterCorpsePrefab;
+		public SpriteRenderer healthBarRenderer;
+		private Transform healthBarFill;
+
+		private void Awake()
+		{
+			if (healthBarRenderer != null)
+			{
+				healthBarFill = healthBarRenderer.transform.Find("FillParent");
+				if (healthBarFill == null)
+				{
+					Debug.LogWarning("Health bar fill not found. Make sure there is a child object named 'Fill' under the health bar renderer.");
+				}
+			}
+		}
+
+		private void Start()
+		{
+			health = Mathf.Clamp(health, 0, maxHealth);
+			TakeDamage(0); // Update stuff, kill the character if necessary.
+			//UpdateHealthBar();
+		}
 
 		public virtual void TakeDamage(float damage)
 		{
 			health -= damage;
+
+			UpdateHealthBar();
+
 			if (health <= 0)
 			{
 				StartDying();
@@ -51,9 +83,16 @@ namespace Isometric2DGame.Characters
 
 		protected void StartDying()
 		{
-			Debug.Log($"{gameObject.name} has died.");
 			Die();
 			isDead = true;
+		}
+
+		protected virtual void UpdateHealthBar()
+		{
+			if (healthBarFill != null)
+			{
+				healthBarFill.localScale = new Vector3(Mathf.Clamp01(health / maxHealth), 1, 1);
+			}
 		}
 	}
 }
