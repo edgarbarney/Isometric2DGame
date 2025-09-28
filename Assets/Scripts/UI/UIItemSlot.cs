@@ -6,7 +6,7 @@ using Isometric2DGame.Characters.Player;
 
 namespace Isometric2DGame.UI
 {
-	public class UIItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+	public class UIItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 	{
 		[SerializeField]
 		private Image myImage;
@@ -79,6 +79,40 @@ namespace Isometric2DGame.UI
 		public void OnPointerExit(PointerEventData eventData)
 		{
 			PlayerInventory.Instance.ExitHoverSlot();
+		}
+
+		// Drag and Drop
+		public void OnBeginDrag(PointerEventData eventData)
+		{
+			if (PlayerInventory.Instance.IsSlotEmpty(slotIndex))
+			{
+				return;
+			}
+
+			PlayerInventory.Instance.DraggedSlot = this;
+			PlayerInventory.Instance.uISlotDragIcon.gameObject.SetActive(true);
+			PlayerInventory.Instance.uISlotDragIcon.GetComponent<Image>().sprite = myChildImage.sprite;
+		}
+
+		public void OnDrag(PointerEventData eventData)
+		{
+			//PlayerInventory.Instance.uISlotDragIcon.transform.position = eventData.position;
+		}
+		
+		public void OnEndDrag(PointerEventData eventData)
+		{
+			PlayerInventory.Instance.DraggedSlot = null;
+			PlayerInventory.Instance.uISlotDragIcon.gameObject.SetActive(false);
+		}
+
+		public void OnDrop(PointerEventData eventData)
+		{
+			if (PlayerInventory.Instance.DraggedSlot == null || PlayerInventory.Instance.DraggedSlot == this)
+			{ 
+				return;
+			}
+
+			PlayerInventory.Instance.SwapSlots(PlayerInventory.Instance.DraggedSlot.SlotIndex, this.SlotIndex);
 		}
 	}
 }

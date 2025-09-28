@@ -15,5 +15,5 @@ MonoBehaviour:
   itemName: Bandage
   itemDescription: Heal your wounds.
   itemIcon: {fileID: 21300000, guid: 3c3d035a0bca1fe4d9e85b66b120a0ad, type: 3}
-  maxStack: 2
+  maxStack: 4
   healthAmount: 5

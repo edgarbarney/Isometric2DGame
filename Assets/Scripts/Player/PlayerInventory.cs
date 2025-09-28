@@ -78,12 +78,21 @@ namespace Isometric2DGame.Characters.Player
 		public RectTransform inventoryUISlotHolder;
 		public UIPickupItemPrompt uIPickupItemPrompt;
 		public UIItemSlotInfo uIItemSlotInfo;
+		public UISlotDragIcon uISlotDragIcon;
 
 		private bool isInventoryUIOpen = false;
 		public bool IsInventoryUIOpen
 		{
 			get { return isInventoryUIOpen; }
 		}
+
+		// Slot that is currently being dragged by the player
+		private UIItemSlot draggedSlot = null;
+		public UIItemSlot DraggedSlot
+		{
+			get { return draggedSlot; }
+			set { draggedSlot = value; }
+		} 
 
 		[SerializeField]
 		private int maxSlots = 20;
@@ -129,6 +138,19 @@ namespace Isometric2DGame.Characters.Player
 			if (uIItemSlotInfo == null)
 			{
 				Debug.LogError("UIItemSlotInfo not found in the scene. Please set it in the inspector");
+			}
+			else
+			{
+				uIItemSlotInfo.gameObject.SetActive(false);
+			}
+
+			if (uISlotDragIcon == null)
+			{
+				Debug.LogError("UIItemDragIcon not found in the scene. Please set it in the inspector");
+			}
+			else
+			{
+				uISlotDragIcon.gameObject.SetActive(false);
 			}
 
 			// Pre-allocate the inventory slots
@@ -578,6 +600,59 @@ namespace Isometric2DGame.Characters.Player
 					break; // No more items to remove
 			}
 			return count; // Remaining items that were not removed
+		}
+
+		// Swaps two inventory slots.
+		// If one of the slots is empty, it will move the item to the empty slot.
+		// If both slots contain the same item type, it will try to stack them.
+		// If both slots contain different item types, it will swap them.
+		public void SwapSlots(int fromIndex, int toIndex)
+		{
+			if (fromIndex < 0 || fromIndex >= itemSlots.Count) return;
+			if (toIndex < 0 || toIndex >= itemSlots.Count) return;
+			if (fromIndex == toIndex) return;
+
+			InventorySlot fromSlot = itemSlots[fromIndex];
+			InventorySlot toSlot = itemSlots[toIndex];
+
+			
+			if (fromSlot.IsEmpty() && toSlot.IsEmpty())
+				return; // Slot is empty, just move
+
+			if (toSlot.IsEmpty())
+			{
+				itemSlots[toIndex] = fromSlot;
+				itemSlots[fromIndex] = InventorySlot.EmptySlot();
+			}
+			else if (fromSlot.IsEmpty())
+			{
+				itemSlots[fromIndex] = toSlot;
+				itemSlots[toIndex] = InventorySlot.EmptySlot();
+			}
+			else if (fromSlot.Item == toSlot.Item)
+			{
+				// Same item type, try stacking
+
+				int spaceLeft = toSlot.Item.MaxStack - toSlot.Count;
+				if (spaceLeft > 0)
+				{
+					int transferAmount = Mathf.Min(spaceLeft, fromSlot.Count);
+					toSlot.Count += transferAmount;
+					fromSlot.Count -= transferAmount;
+
+					if (fromSlot.Count <= 0)
+						itemSlots[fromIndex] = InventorySlot.EmptySlot();
+				}
+			}
+			else
+			{
+				// Different items, swap
+				InventorySlot temp = fromSlot;
+				itemSlots[fromIndex] = toSlot;
+				itemSlots[toIndex] = temp;
+			}
+
+			RefreshUISlots();
 		}
 
 		public bool PossiblePickupInteract()

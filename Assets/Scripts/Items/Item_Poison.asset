@@ -15,5 +15,5 @@ MonoBehaviour:
   itemName: Poison
   itemDescription: Seems Harmful.
   itemIcon: {fileID: 21300000, guid: ab333a63d69128f44af89a8fe9a4e336, type: 3}
-  maxStack: 2
+  maxStack: 4
   healthAmount: -10

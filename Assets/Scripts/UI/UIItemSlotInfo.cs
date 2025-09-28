@@ -1,9 +1,7 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using TMPro;
 using Isometric2DGame.Items;
-using Isometric2DGame.Characters.Player;
 
 namespace Isometric2DGame.UI
 {
