@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Unity.Cinemachine;
 
 namespace Isometric2DGame.Characters.Player
 {
@@ -36,6 +37,11 @@ namespace Isometric2DGame.Characters.Player
 		{
 			get { return playerCamera; }
 		}
+		private CinemachineCamera playerCinemachine;
+		public CinemachineCamera PlayerCinemachine
+		{
+			get { return playerCinemachine; }
+		}
 		private PlayerSpriteManager playerSpriteManager;
 		public PlayerSpriteManager PlayerSpriteManager
 		{
@@ -66,7 +72,12 @@ namespace Isometric2DGame.Characters.Player
 			myRigidbody = GetComponent<Rigidbody2D>();
 			myPlayerInput = GetComponent<PlayerInput>();
 			playerCamera = GameObject.Find("PlayerCameraSystem").GetComponentInChildren<Camera>();
+			playerCinemachine = playerCamera.transform.parent.GetComponentInChildren<CinemachineCamera>();
 			playerSpriteManager = GetComponentInChildren<PlayerSpriteManager>();
+
+			// Set Camera to follow player
+			if (playerCinemachine.Follow == null)
+				playerCinemachine.Follow = transform;
 		}
 
 		private void FixedUpdate()
@@ -106,23 +117,24 @@ namespace Isometric2DGame.Characters.Player
 		// Input System Callbacks
 		// ==========================================================
 
-		public void OnMove(InputAction.CallbackContext context)
+		public void OnCancel(InputValue value)
 		{
-			moveInputVector = context.ReadValue<Vector2>();
+			PlayerInventory.Instance.ToggleInventoryUI(false);
 		}
 
-		public void OnInteract(InputAction.CallbackContext context)
+		public void OnMove(InputValue value)
 		{
-			if (context.performed)
-				_ = PlayerInventory.Instance.PossiblePickupInteract();
+			moveInputVector = value.Get<Vector2>();
 		}
 
-		public void OnInventory(InputAction.CallbackContext context)
+		public void OnInteract(InputValue value)
 		{
-			if (context.performed)
-			{
-				PlayerInventory.Instance.ToggleInventoryUI(!PlayerInventory.Instance.IsInventoryUIOpen);
-			}
+			_ = PlayerInventory.Instance.PossiblePickupInteract();
+		}
+
+		public void OnInventory(InputValue value)
+		{
+			PlayerInventory.Instance.ToggleInventoryUI(!PlayerInventory.Instance.IsInventoryUIOpen);
 		}
 	}
 }
