@@ -263,11 +263,11 @@ namespace Isometric2DGame.Characters.Player
 					if (slot.SlotIndex == uiItemSlot.SlotIndex)
 					{
 						lastSelectedItemSlot = slot; // Set the last selected item slot
-						slot.MyImage.color = uiItemSlot.selectedColor;
+						slot.MyImage.color = uiItemSlot.selectedColour;
 					}
 					else
 					{
-						slot.MyImage.color = uiItemSlot.unselectedColor;
+						slot.MyImage.color = uiItemSlot.unselectedColour;
 					}
 				}
 			}

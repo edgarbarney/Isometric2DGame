@@ -1,8 +1,9 @@
+using Isometric2DGame.Characters.Player;
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using TMPro;
-using Isometric2DGame.Characters.Player;
 
 namespace Isometric2DGame.UI
 {
@@ -34,8 +35,10 @@ namespace Isometric2DGame.UI
 		}
 
 		public Sprite emptySprite;
-		public Color unselectedColor;
-		public Color selectedColor;
+		public Color unselectedColour;
+		public Color selectedColour;
+		private Color emptyItemColour = new(0.0f, 0.0f, 0.0f, 0.0f);
+		private Color normalItemColour = new(1.0f, 1.0f, 1.0f, 1.0f);
 
 		public void SetSlot(int index)
 		{
@@ -55,12 +58,14 @@ namespace Isometric2DGame.UI
 			}
 
 			myChildImage.sprite = slotData.Item.ItemIcon;
+			myChildImage.color = normalItemColour;
 			myCountText.text = slotData.Count > 1 ? slotData.Count.ToString() : string.Empty;
 		}
 
 		private void ClearSlot()
 		{
 			myChildImage.sprite = emptySprite;
+			myChildImage.color = emptyItemColour;
 			myCountText.text = string.Empty;
 		}
 
@@ -89,9 +94,11 @@ namespace Isometric2DGame.UI
 				return;
 			}
 
+			var slotData = PlayerInventory.Instance.ItemSlots[slotIndex];
+
 			PlayerInventory.Instance.DraggedSlot = this;
 			PlayerInventory.Instance.uISlotDragIcon.gameObject.SetActive(true);
-			PlayerInventory.Instance.uISlotDragIcon.GetComponent<Image>().sprite = myChildImage.sprite;
+			PlayerInventory.Instance.uISlotDragIcon.SetItem(slotData.Item, slotData.Count);
 		}
 
 		public void OnDrag(PointerEventData eventData)
@@ -103,6 +110,7 @@ namespace Isometric2DGame.UI
 		{
 			PlayerInventory.Instance.DraggedSlot = null;
 			PlayerInventory.Instance.uISlotDragIcon.gameObject.SetActive(false);
+			PlayerInventory.Instance.uISlotDragIcon.SetItem(null, 0);
 		}
 
 		public void OnDrop(PointerEventData eventData)
